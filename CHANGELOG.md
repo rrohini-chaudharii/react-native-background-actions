@@ -5,6 +5,13 @@
 
 * **Android:** allow setting `foregroundServiceType` (+ improve stability) ([#265](https://github.com/Rapsssito/react-native-background-actions/issues/265)) ([9efade8](https://github.com/Rapsssito/react-native-background-actions/commit/9efade83a9767d58753a4e6b64663cf85d00214a)), closes [#264](https://github.com/Rapsssito/react-native-background-actions/issues/264) [#258](https://github.com/Rapsssito/react-native-background-actions/issues/258)
 
+# [4.1.0](https://github.com/Rapsssito/react-native-background-actions/compare/v4.0.1...v4.1.0) (2026-04-07)
+
+
+### Features
+
+* **Android:** allow setting `foregroundServiceType` (+ improve stability) ([#265](https://github.com/Rapsssito/react-native-background-actions/issues/265)) ([9efade8](https://github.com/Rapsssito/react-native-background-actions/commit/9efade83a9767d58753a4e6b64663cf85d00214a)), closes [#264](https://github.com/Rapsssito/react-native-background-actions/issues/264) [#258](https://github.com/Rapsssito/react-native-background-actions/issues/258)
+
 ## [4.0.1](https://github.com/Rapsssito/react-native-background-actions/compare/v4.0.0...v4.0.1) (2024-07-09)
 
 
