@@ -14,6 +14,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.ServiceCompat;
 
 import com.facebook.react.HeadlessJsTaskService;
 import com.facebook.react.bridge.Arguments;
@@ -38,18 +39,20 @@ final public class RNBackgroundActionsTask extends HeadlessJsTaskService {
             notificationIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(linkingURI));
         } else {
             //as RN works on single activity architecture - we don't need to find current activity on behalf of react context
-            notificationIntent = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER);
+            notificationIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+            if (notificationIntent == null) {
+                notificationIntent = new Intent(Intent.ACTION_MAIN)
+                        .addCategory(Intent.CATEGORY_LAUNCHER)
+                        .setPackage(context.getPackageName());
+            }
         }
         final PendingIntent contentIntent;
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            contentIntent = PendingIntent.getActivity(context,0, notificationIntent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT);
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            contentIntent = PendingIntent.getActivity(context, 0, notificationIntent, PendingIntent.FLAG_MUTABLE);
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            contentIntent = PendingIntent.getActivity(context, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        } else {
-            contentIntent = PendingIntent.getActivity(context, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        int pendingIntentFlags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // IMMUTABLE is available and recommended from API 23+
+            pendingIntentFlags |= PendingIntent.FLAG_IMMUTABLE;
         }
+        contentIntent = PendingIntent.getActivity(context, 0, notificationIntent, pendingIntentFlags);
         final NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setContentTitle(taskTitle)
                 .setContentText(taskDesc)
@@ -81,6 +84,10 @@ final public class RNBackgroundActionsTask extends HeadlessJsTaskService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent == null) {
+            stopSelf(startId);
+            return START_NOT_STICKY;
+        }
         final Bundle extras = intent.getExtras();
         if (extras == null) {
             throw new IllegalArgumentException("Extras cannot be null");
@@ -90,8 +97,35 @@ final public class RNBackgroundActionsTask extends HeadlessJsTaskService {
         // Create the notification
         final Notification notification = buildNotification(this, bgOptions);
 
-        startForeground(SERVICE_NOTIFICATION_ID, notification);
+        try {
+            ServiceCompat.startForeground(
+                this,
+                SERVICE_NOTIFICATION_ID,
+                notification,
+                bgOptions.getForegroundServiceType()
+            );
+        } catch (RuntimeException e) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                    && e instanceof android.app.ForegroundServiceStartNotAllowedException) {
+                // Android 12+: not allowed to start foreground service from background
+                stopSelf(startId);
+                return START_NOT_STICKY;
+            }
+            throw e;
+        }
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
+    public void onTimeout(int startId) {
+        super.onTimeout(startId);
+        stopSelf(startId);
+    }
+
+    @Override
+    public void onTimeout(int startId, int fgsType) {
+        super.onTimeout(startId, fgsType);
+        stopSelf(startId);
     }
 
     private void createNotificationChannel(@NonNull final String taskTitle, @NonNull final String taskDesc) {

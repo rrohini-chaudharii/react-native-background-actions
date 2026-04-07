@@ -9,7 +9,8 @@ import EventEmitter from 'eventemitter3';
  *            taskIcon: {name: string, type: string, package?: string},
  *            color?: string
  *            linkingURI?: string,
- *            progressBar?: {max: number, value: number, indeterminate?: boolean}
+ *            progressBar?: {max: number, value: number, indeterminate?: boolean},
+ *            foregroundServiceType?: Array<'dataSync'|'mediaPlayback'|'phoneCall'|'location'|'connectedDevice'|'mediaProjection'|'camera'|'microphone'|'health'|'remoteMessaging'|'systemExempted'|'shortService'|'specialUse'>
  *            }} BackgroundTaskOptions
  * @extends EventEmitter<'expiration',any>
  */
@@ -118,6 +119,7 @@ class BackgroundServer extends EventEmitter {
             color: options.color || '#ffffff',
             linkingURI: options.linkingURI,
             progressBar: options.progressBar,
+            foregroundServiceType: options.foregroundServiceType,
         };
     }
 

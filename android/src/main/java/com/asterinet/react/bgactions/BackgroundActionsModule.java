@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -39,14 +40,17 @@ public class BackgroundActionsModule extends ReactContextBaseJavaModule {
     public void start(@NonNull final ReadableMap options, @NonNull final Promise promise) {
         try {
             // Stop any other intent
-            if (currentServiceIntent != null) reactContext.stopService(currentServiceIntent);
+            if (currentServiceIntent != null) {
+                reactContext.stopService(currentServiceIntent);
+            }
             // Create the service
             currentServiceIntent = new Intent(reactContext, RNBackgroundActionsTask.class);
             // Get the task info from the options
             final BackgroundTaskOptions bgOptions = new BackgroundTaskOptions(reactContext, options);
             currentServiceIntent.putExtras(bgOptions.getExtras());
             // Start the task
-            reactContext.startService(currentServiceIntent);
+            // startForegroundService on Android 8+ (API 26+), startService below
+            ContextCompat.startForegroundService(reactContext, currentServiceIntent);
             promise.resolve(null);
         } catch (Exception e) {
             promise.reject(e);
@@ -56,8 +60,10 @@ public class BackgroundActionsModule extends ReactContextBaseJavaModule {
     @SuppressWarnings("unused")
     @ReactMethod
     public void stop(@NonNull final Promise promise) {
-        if (currentServiceIntent != null)
+        if (currentServiceIntent != null) {
             reactContext.stopService(currentServiceIntent);
+            currentServiceIntent = null;
+        }
         promise.resolve(null);
     }
 

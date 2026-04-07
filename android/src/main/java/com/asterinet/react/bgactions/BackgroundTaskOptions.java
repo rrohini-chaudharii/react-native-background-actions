@@ -1,6 +1,8 @@
 package com.asterinet.react.bgactions;
 
+import android.content.pm.ServiceInfo;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.ColorInt;
@@ -11,6 +13,8 @@ import androidx.annotation.Nullable;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReadableMap;
+
+import java.util.ArrayList;
 
 public final class BackgroundTaskOptions {
     private final Bundle extras;
@@ -100,5 +104,85 @@ public final class BackgroundTaskOptions {
     @Nullable
     public Bundle getProgressBar() {
         return extras.getBundle("progressBar");
+    }
+
+    public int getForegroundServiceType() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            return 0;
+        }
+        final ArrayList<String> types;
+        try {
+            types = extras.getStringArrayList("foregroundServiceType");
+        } catch (ClassCastException e) {
+            // If the stored value is not an ArrayList<String>, treat it as no types.
+            return 0;
+        }
+        if (types == null) {
+            return 0;
+        }
+        int result = 0;
+        for (final String type : types) {
+            if (type != null && !type.isEmpty()) {
+                final int flag = typeToForegroundServiceFlag(type);
+                if (flag != 0) {
+                    result |= flag;
+                }
+            }
+        }
+        return result;
+    }
+
+    private int typeToForegroundServiceFlag(@NonNull final String type) {
+        switch (type) {
+            case "dataSync":
+                return ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC;
+            case "mediaPlayback":
+                return ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK;
+            case "phoneCall":
+                return ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL;
+            case "location":
+                return ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
+            case "connectedDevice":
+                return ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE;
+            case "mediaProjection":
+                return ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION;
+            case "camera":
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    return ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA;
+                }
+                return 0;
+            case "microphone":
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    return ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE;
+                }
+                return 0;
+            case "health":
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    return ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH;
+                }
+                return 0;
+            case "remoteMessaging":
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    return ServiceInfo.FOREGROUND_SERVICE_TYPE_REMOTE_MESSAGING;
+                }
+                return 0;
+            case "systemExempted":
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    return ServiceInfo.FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED;
+                }
+                return 0;
+            case "shortService":
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    return ServiceInfo.FOREGROUND_SERVICE_TYPE_SHORT_SERVICE;
+                }
+                return 0;
+            case "specialUse":
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    return ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE;
+                }
+                return 0;
+            default:
+                return 0;
+        }
     }
 }

@@ -130,6 +130,60 @@ test('updateNotification-android-notRunning', async () => {
     await expect(BackgroundActions.updateNotification(updatedOptions)).rejects.toBeDefined();
 });
 
+test('foregroundServiceType-single', async () => {
+    expect.hasAssertions();
+    let promiseFinish = () => {};
+    const defaultTask = jest.fn(
+        // @ts-ignore
+        async () => await new Promise((resolve) => (promiseFinish = resolve))
+    );
+    Platform.OS = 'android';
+    RNBackgroundActionsModule.start.mockClear();
+    /** @type {Array<'location'>} */
+    const foregroundServiceType = ['location'];
+    const options = { ...defaultOptions, foregroundServiceType };
+    await BackgroundActions.start(defaultTask, options);
+    const passedOptions = RNBackgroundActionsModule.start.mock.calls[0][0];
+    expect(passedOptions.foregroundServiceType).toEqual(['location']);
+    promiseFinish();
+    await flushPromises();
+});
+
+test('foregroundServiceType-multiple', async () => {
+    expect.hasAssertions();
+    let promiseFinish = () => {};
+    const defaultTask = jest.fn(
+        // @ts-ignore
+        async () => await new Promise((resolve) => (promiseFinish = resolve))
+    );
+    Platform.OS = 'android';
+    RNBackgroundActionsModule.start.mockClear();
+    /** @type {Array<'location' | 'microphone'>} */
+    const foregroundServiceType = ['location', 'microphone'];
+    const options = { ...defaultOptions, foregroundServiceType };
+    await BackgroundActions.start(defaultTask, options);
+    const passedOptions = RNBackgroundActionsModule.start.mock.calls[0][0];
+    expect(passedOptions.foregroundServiceType).toEqual(['location', 'microphone']);
+    promiseFinish();
+    await flushPromises();
+});
+
+test('foregroundServiceType-undefined', async () => {
+    expect.hasAssertions();
+    let promiseFinish = () => {};
+    const defaultTask = jest.fn(
+        // @ts-ignore
+        async () => await new Promise((resolve) => (promiseFinish = resolve))
+    );
+    Platform.OS = 'android';
+    RNBackgroundActionsModule.start.mockClear();
+    await BackgroundActions.start(defaultTask, defaultOptions);
+    const passedOptions = RNBackgroundActionsModule.start.mock.calls[0][0];
+    expect(passedOptions.foregroundServiceType).toBeUndefined();
+    promiseFinish();
+    await flushPromises();
+});
+
 test('expiration-event', () => {
     Platform.OS = 'ios';
     return new Promise((done) => {
