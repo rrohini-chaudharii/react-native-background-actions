@@ -186,8 +186,8 @@ test('foregroundServiceType-undefined', async () => {
 
 test('expiration-event', () => {
     Platform.OS = 'ios';
-    return new Promise((done) => {
-        BackgroundActions.on('expiration', done);
-        mockedEventEmitter.addListener.mock.calls[0][1]();
-    });
+    const expirationHandler = jest.fn();
+    BackgroundActions.on('expiration', expirationHandler);
+    mockedEventEmitter.addListener.mock.calls[0][1]();
+    expect(expirationHandler).toHaveBeenCalledTimes(1);
 });
