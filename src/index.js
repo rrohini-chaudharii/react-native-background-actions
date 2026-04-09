@@ -119,7 +119,7 @@ class BackgroundServer extends EventEmitter {
             color: options.color || '#ffffff',
             linkingURI: options.linkingURI,
             progressBar: options.progressBar,
-            foregroundServiceType: options.foregroundServiceType,
+            foregroundServiceType:options.foregroundServiceType ? options.foregroundServiceType : (Platform.OS === 'android' ? ['dataSync'] : undefined),
         };
     }
 
