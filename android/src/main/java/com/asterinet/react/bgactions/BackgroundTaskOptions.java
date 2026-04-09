@@ -106,28 +106,44 @@ public final class BackgroundTaskOptions {
         return extras.getBundle("progressBar");
     }
 
+    @Nullable
+    private ArrayList<String> resolveForegroundServiceTypeList() {
+        ArrayList<String> types = extras.getStringArrayList("foregroundServiceType");
+        if (types != null) {
+            return types;
+        }
+        Object raw = extras.get("foregroundServiceType");
+        if (raw instanceof ArrayList) {
+            ArrayList<?> list = (ArrayList<?>) raw;
+            ArrayList<String> out = new ArrayList<>();
+            for (Object o : list) {
+                if (o != null) {
+                    out.add(String.valueOf(o));
+                }
+            }
+            return out.isEmpty() ? null : out;
+        }
+        return null;
+    }
+    
     public int getForegroundServiceType() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             return 0;
         }
-        final ArrayList<String> types;
-        try {
-            types = extras.getStringArrayList("foregroundServiceType");
-        } catch (ClassCastException e) {
-            // If the stored value is not an ArrayList<String>, treat it as no types.
-            return 0;
-        }
-        if (types == null) {
-            return 0;
-        }
+        final ArrayList<String> types = resolveForegroundServiceTypeList();
         int result = 0;
-        for (final String type : types) {
-            if (type != null && !type.isEmpty()) {
-                final int flag = typeToForegroundServiceFlag(type);
-                if (flag != 0) {
-                    result |= flag;
+        if (types != null) {
+            for (String type : types) {
+                if (type != null && !type.isEmpty()) {
+                    int flag = typeToForegroundServiceFlag(type);
+                    if (flag != 0) {
+                        result |= flag;
+                    }
                 }
             }
+        }
+        if (result == 0 && Build.VERSION.SDK_INT >= 36) {
+            return ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC;
         }
         return result;
     }
