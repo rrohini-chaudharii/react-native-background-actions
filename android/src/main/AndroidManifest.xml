@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.asterinet.react.bgactions">
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_TYPE_DATA_SYNC" />
     <application>
-        <service android:name=".RNBackgroundActionsTask"/>
+        <service android:name=".RNBackgroundActionsTask" android:foregroundServiceType="dataSync"/>
     </application>
 </manifest>
